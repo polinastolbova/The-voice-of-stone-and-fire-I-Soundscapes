@@ -1,0 +1,43 @@
+<CsoundSynthesizer>
+<CsInstruments>
+sr = 44100
+ksmps = 32
+nchnls = 2
+0dbfs = 1
+
+giSine ftgen 0, 0, 2^10, 10, 1
+seed 0
+instr 1
+    aNoise rand 0.3
+    kAmp randomi -12, -3, 0.5
+    aNoise = aNoise * ampdb(kAmp)
+
+    kCutoff randomi 200, 1200, 1
+    aFilt reson aNoise, kCutoff, kCutoff/4
+    aFilt balance aFilt, aNoise
+
+    iFb = 0.6
+    aDelayTime randomi 0.1, 0.6, 0.3
+    aDelay vdelayx aFilt + iFb * aFilt, aDelayTime, 1, 128
+
+    kPan randomi 0.1, 0.9, 0.7
+    aL, aR pan2 aFilt + aDelay, kPan
+
+    outs aL, aR
+endin
+instr 2
+    kFreq randomi 50, 70, 0.1
+    aSig poscil 0.1, kFreq, giSine
+    aMod oscil 0.05, 0.1, giSine
+    aSig = aSig * (1 + aMod)
+    kPan randomi 0.3, 0.7, 0.2
+    aL, aR pan2 aSig, kPan
+    outs aL, aR
+endin
+</CsInstruments>
+
+<CsScore>
+i 1 0 3600
+i 2 0 3600
+</CsScore>
+</CsoundSynthesizer>
