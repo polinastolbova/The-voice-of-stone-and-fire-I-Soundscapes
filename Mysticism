@@ -1,0 +1,50 @@
+<CsoundSynthesizer>
+<CsInstruments>
+
+sr = 44100
+ksmps = 32
+nchnls = 2
+0dbfs = 1
+
+; Instrument 1 - Dynamic Filter Noise Generation
+instr 1
+kdev line 0, p3, 0.9
+seed 20120125
+aimp gausstrig 0.5, 10, kdev
+aenv filter2 aimp, 1, 1, 0.993, 0.993
+anoi fractalnoise 0.2, 1.7
+al = anoi * aenv
+ar delay al, 0.02
+outs al, ar
+kdep rspline 5, 8, 0.2, 1 ; Filter depth using random
+endin
+
+; Tool 11 - Generate a signal with filtering and panning
+instr 11
+kfreq rspline 0.01, 20, 0.2, 1 ; Frequency using random spline
+ktrig init 0 ; Trigger to restart loop
+iphase = 0 ; Initial filter phase
+; Loop to change filter using `loopxseg`
+kcfoct loopxseg kfreq, ktrig, iphase, 1, 1, 0, 0
+kenv linseg 0, 0.01, 1, p3-5.01, 1, 5, 0 ; Amplitude envelope
+asig vco2 0.2 * kenv, cpsmidinn(48), 0 ; Generate a signal with a changing envelope
+spline
+kcf port cpsoct((kcfoct * kdep) + 4), 0.001 ; Smoothly change the filter frequency
+asig moogladder asig, kcf, rnd(0.6) ; Apply the Moog filter
+
+; Pan the signal
+aL, aR pan2 asig, rnd(1)
+
+; Output sound to the left and right channels
+outs aL, aR
+endin
+
+</CsInstruments>
+
+<CsScore>
+; Run instruments for 360 seconds
+i 1 0 360
+i 11 0 360
+e
+</CsScore>
+</CsoundSynthesizer>
